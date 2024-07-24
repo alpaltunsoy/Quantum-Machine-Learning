@@ -23,11 +23,9 @@ def read_data():
     return train_data, test_data
 
 def scaling(x):
-    
     print("X scaling is started")
     sc = StandardScaler()
-    X = sc.fit_transform(x)
-    
+    X = sc.fit_transform(x)    
     return X
 
 def make_encoding_x(train_data):
@@ -59,15 +57,14 @@ def make_y(train_data):
     y = train_data.iloc[:,24]
     return y 
 
-
 def missing_imputer(x):
     print("Imputing missing values")
     imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
     x_imputed = imputer.fit_transform(x)
     return x_imputed
 
-def svm_classifier(x_train,y_train,x_test):
-    svc = SVC(kernel = "rbf")
+def svm_classifier(x_train,y_train,x_test,svm_type):
+    svc = SVC(kernel = str(svm_type))
     print("SVC learning is started")
     svc.fit(x_train,y_train)
     print("SVC prediction is started")
@@ -75,56 +72,39 @@ def svm_classifier(x_train,y_train,x_test):
     print("Prediction is finished")
     return y_pred
 
-
-def start():
+def start(svm_type):
     train_data, test_data = read_data()
     customer_types,type_of_travel,gender,class_ = make_encoding_x(train_data)
     
     #train files making
     x_train = make_x(train_data, customer_types,type_of_travel,gender,class_)
     y_train = make_y(train_data)
+    
     #test files making
     customer_types,type_of_travel,gender,class_ = make_encoding_x(test_data)
     x_test = make_x(test_data, customer_types,type_of_travel,gender,class_)
     y_test = make_y(test_data)
     
-    
-    
     #missing values
     x_train = missing_imputer(x_train)
     x_test = missing_imputer(x_test)
-    
     
     #scaling datas 
     x_test = scaling(x_test)
     x_train = scaling(x_train)
     
     #test files making
-    y_pred = svm_classifier(x_train, y_train, x_test)
+    y_pred = svm_classifier(x_train, y_train, x_test,svm_type)
     
-    
-    return x_train, y_train,x_test,y_test,y_pred
+    return x_train, y_train,x_test,y_test,y_pred,svm_type
 
-def report(elapsed_time,accuracy,precision,recall,f1_score,specificity):
-    results = {
-        
-        "execution_time_ms": elapsed_time,
-        'metrics': {
-            'accuracy': accuracy,
-            'precision': precision,
-            'recall': recall,
-            'f1_score': f1_score,
-            'specificity': specificity
-        }
-        }
-    
+def report(result):
     with open('report.json', 'w') as f:
-        json.dump(results, f, indent=4)
+        json.dump(result, f, indent=4)
     print("Report saved to report.json")
     
-    
 def calculator(cm):
-    print("Calculating Metrics")
+    print("Calculating Metrics\n")
     TP, FP, FN, TN = cm.ravel()
     accuracy = (TP + TN) / (TP + TN + FP + FN)
     precision = TP / (TP + FP)
@@ -133,31 +113,46 @@ def calculator(cm):
     specificity = TN / (TN + FP)
     return accuracy,precision,recall,f1_score,specificity
         
-
+def flow():
+    all_results = []
+    svm_type = ['linear',"rbf","sigmoid"]
+    
+    for svm_types in svm_type: 
+        #taking time for calculating time
+        start_time = time.time()
+        print("Making predictions for ", svm_types)
+    
+        #defining variables for independent and dependent variables and starting program
+        x_train, y_train,x_test,y_test,y_pred,svm_type = start(svm_types)
+    
+        #making confusion matrix for analysis
+        cm = confusion_matrix(y_test,y_pred)
+        print(cm)
+        accuracy,precision,recall,f1_score,specificity = calculator(cm)
+        
+        #finishing time for calculating elapsed time
+        end_time = time.time()
+        elapsed_time = (end_time - start_time) * 1000
+        
+        result = {
+           "kernel_type": svm_type,
+           "execution_time_ms": elapsed_time,
+           'metrics': {
+               'accuracy': accuracy,
+               'precision': precision,
+               'recall': recall,
+               'f1_score': f1_score,
+               'specificity': specificity
+           }
+       }
+        all_results.append(result)
+        
+    report(all_results)
+    print("SVC type is completed \n\n\n")
     
 def main():
-    #taking time for calculating time
-    start_time = time.time()
+    flow()
+    print("Main function is finished")
     
-    #defining variables for independent and dependent variables and starting program
-    x_train, y_train,x_test,y_test,y_pred = start()
-    
-    #making confusion matrix for analysis
-    cm = confusion_matrix(y_test,y_pred)
-    print(cm)
-    accuracy,precision,recall,f1_score,specificity = calculator(cm)
-    
-    #finishing time for calculating elapsed time
-    end_time = time.time()
-    elapsed_time = (end_time - start_time) * 1000
-    
-    
-    report(elapsed_time, accuracy,precision,recall,f1_score,specificity)
-    print("Program is finished")
-    
-
-    
-    
-
 if __name__ == "__main__":
     main()

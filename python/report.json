@@ -1,0 +1,35 @@
+[
+    {
+        "kernel_type": "linear",
+        "execution_time_ms": 1243110.419034958,
+        "metrics": {
+            "accuracy": 0.8734216199568833,
+            "precision": 0.9118918547999726,
+            "recall": 0.8689596547440005,
+            "f1_score": 0.8899082568807339,
+            "specificity": 0.8798090424038192
+        }
+    },
+    {
+        "kernel_type": "rbf",
+        "execution_time_ms": 234262.17985153198,
+        "metrics": {
+            "accuracy": 0.9541884816753927,
+            "precision": 0.9680230563370616,
+            "recall": 0.9511833322095611,
+            "f1_score": 0.9595293157393551,
+            "specificity": 0.9581875280394796
+        }
+    },
+    {
+        "kernel_type": "sigmoid",
+        "execution_time_ms": 328303.6150932312,
+        "metrics": {
+            "accuracy": 0.772405297197413,
+            "precision": 0.7979139504563233,
+            "recall": 0.7967112024665981,
+            "f1_score": 0.7973121228743829,
+            "specificity": 0.7412353923205343
+        }
+    }
+]
