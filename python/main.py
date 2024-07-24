@@ -6,7 +6,6 @@ Created on Wed Jul 24 14:00:43 2024
 """
 
 import pandas as pd 
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
@@ -14,6 +13,8 @@ from sklearn.svm import SVC
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix
+import time
+import json
 
 def read_data():
     print("Importing Csv train and test files")
@@ -104,12 +105,57 @@ def start():
     
     return x_train, y_train,x_test,y_test,y_pred
 
+def report(elapsed_time,accuracy,precision,recall,f1_score,specificity):
+    results = {
+        
+        "execution_time_ms": elapsed_time,
+        'metrics': {
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'f1_score': f1_score,
+            'specificity': specificity
+        }
+        }
+    
+    with open('report.json', 'w') as f:
+        json.dump(results, f, indent=4)
+    print("Report saved to report.json")
+    
+    
+def calculator(cm):
+    print("Calculating Metrics")
+    TP, FP, FN, TN = cm.ravel()
+    accuracy = (TP + TN) / (TP + TN + FP + FN)
+    precision = TP / (TP + FP)
+    recall = TP / (TP + FN)
+    f1_score = 2 * (precision * recall) / (precision + recall)
+    specificity = TN / (TN + FP)
+    return accuracy,precision,recall,f1_score,specificity
+        
 
+    
 def main():
-    global x_train, y_train,x_test,y_test,y_pred
+    #taking time for calculating time
+    start_time = time.time()
+    
+    #defining variables for independent and dependent variables and starting program
     x_train, y_train,x_test,y_test,y_pred = start()
+    
+    #making confusion matrix for analysis
     cm = confusion_matrix(y_test,y_pred)
     print(cm)
+    accuracy,precision,recall,f1_score,specificity = calculator(cm)
+    
+    #finishing time for calculating elapsed time
+    end_time = time.time()
+    elapsed_time = (end_time - start_time) * 1000
+    
+    
+    report(elapsed_time, accuracy,precision,recall,f1_score,specificity)
+    print("Program is finished")
+    
+
     
     
 
