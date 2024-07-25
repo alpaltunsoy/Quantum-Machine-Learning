@@ -24,6 +24,7 @@ from qiskit.primitives import Sampler
 from IPython.display import clear_output
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
+import json
 
 
 def load_data():
@@ -118,6 +119,17 @@ def quantum_algorithm(x_train,y_train,x_test,y_test):
 
     print(f"Quantum VQC on the training dataset: {train_score_q4:.2f}")
     print(f"Quantum VQC on the test dataset:     {test_score_q4:.2f}")
+    
+    # Save scores to a JSON file
+    scores = {
+       "train_score": train_score_q4,
+       "test_score": test_score_q4,
+       "training time" : elapsed
+   }
+    with open("report.json", "w") as f:
+        json.dump(scores, f)
+
+    print("Scores have been saved to 'vqc_scores.json'")
 
 
 
