@@ -25,6 +25,8 @@ from IPython.display import clear_output
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 import json
+import boto3
+from datetime import datetime
 
 
 def load_data():
@@ -52,7 +54,21 @@ def make_y(y):
     y = y.iloc[:,-1].values
     return y 
     
-    
+def upload_to_s3(file_name, bucket_name, object_name=None):
+
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = file_name
+
+    # Upload the file
+    s3 = boto3.resource('s3')
+    try:
+        s3.Bucket(bucket_name).upload_file(file_name, object_name)
+    except Exception as e:
+        print(f"Error uploading file to S3: {e}")
+        return False
+    return True
+
 
 def missing_values(x):
     print("Imputing missing values")
@@ -71,13 +87,13 @@ def y_encoding(y):
     return y 
     
 
-
 def quantum_algorithm(x_train,y_train,x_test,y_test):
+    
     print("Quantum algorithm is started")
-    global num_features
     print("Finding features")
     
     num_features = x_train.shape[1]
+    
     #drawing circuit diagram
     feature_map = ZZFeatureMap(feature_dimension=num_features, reps=1)
     feature_map.decompose().draw(output="mpl", style="clifford", fold=20)
@@ -86,6 +102,9 @@ def quantum_algorithm(x_train,y_train,x_test,y_test):
     print("Drawing ansatz circuit")
     ansatz = RealAmplitudes(num_qubits=num_features, reps=3)
     ansatz.decompose().draw(output="mpl", style="clifford", fold=20)
+    
+
+    
     
     optimizer = COBYLA(maxiter=100)
     sampler = Sampler()
@@ -126,10 +145,21 @@ def quantum_algorithm(x_train,y_train,x_test,y_test):
        "test_score": test_score_q4,
        "training time" : elapsed
    }
-    with open("report.json", "w") as f:
+    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    report_name = current_time + "_report.json"
+    with open(report_name, "w") as f:
         json.dump(scores, f)
 
     print("Scores have been saved to 'vqc_scores.json'")
+
+    
+    bucket_name = 'alposmanyeni'
+     # Include date and time in the file name
+
+    if upload_to_s3(report_name, bucket_name,report_name):
+        print(f"Report successfully uploaded to S3 at '{bucket_name}/{report_name}'")
+    else:
+        print("Failed to upload the report to S3.")
 
 
 
